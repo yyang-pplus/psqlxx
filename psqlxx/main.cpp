@@ -53,6 +53,7 @@ using UniqueFile = std::unique_ptr<FILE, decltype([](FILE *f) {
 
     return result;
 }
+
 } // namespace
 
 
