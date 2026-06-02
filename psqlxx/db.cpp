@@ -193,8 +193,8 @@ bool DbProxy::PrintConnectionInfo() const {
         return false;
 
     m_out << "You are connected to database \"" << m_connection->dbname() << "\" as user \""
-          << m_connection->username() << "\" at port \"" << m_connection->port() << "\"."
-          << std::endl;
+          << m_connection->username() << "\" at port \""
+          << m_connection->port_number().value_or(0) << "\"." << std::endl;
 
     return true;
 }
@@ -209,10 +209,8 @@ void DbProxy::initTypeMap() {
     if (not DoTransaction("select typname, oid from pg_type;",
                           [this](const pqxx::result &a_result) {
                               for (const auto &row : a_result) {
-                                  if (not row.empty()) {
-                                      auto [type_name, oid] = row.as<std::string, int>();
-                                      m_pg_type_map[oid] = std::move(type_name);
-                                  }
+                                  auto [type_name, oid] = row.as<std::string, int>();
+                                  m_pg_type_map[oid] = std::move(type_name);
                               }
                           })) {
         std::cerr << "Failed to query pg_type from DB." << std::endl;
