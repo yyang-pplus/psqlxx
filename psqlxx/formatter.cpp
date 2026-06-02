@@ -19,8 +19,7 @@ inline auto &printSummary(std::ostream &out, const std::size_t size) {
     return out << ")";
 }
 
-auto &printStrInCenter(std::ostream &out, const std::string_view a_field,
-                       const int width) {
+auto &printStrInCenter(std::ostream &out, const std::string_view a_field, const int width) {
     const int padding = width - a_field.size();
     const auto half_spaces = std::string(padding > 1 ? padding / 2 : 0, ' ');
     out << half_spaces << a_field << half_spaces;
@@ -31,8 +30,7 @@ auto &printStrInCenter(std::ostream &out, const std::string_view a_field,
     return out;
 }
 
-auto &printStrLeft(std::ostream &out, const std::string_view a_field,
-                   const int width) {
+auto &printStrLeft(std::ostream &out, const std::string_view a_field, const int width) {
     const int padding = width - a_field.size() - 1;
     const auto spaces = std::string(padding > 0 ? padding : 0, ' ');
     if (padding > 0) {
@@ -41,8 +39,7 @@ auto &printStrLeft(std::ostream &out, const std::string_view a_field,
     return out << a_field << spaces;
 }
 
-auto &printStrRight(std::ostream &out, const std::string_view a_field,
-                    const int width) {
+auto &printStrRight(std::ostream &out, const std::string_view a_field, const int width) {
     const int padding = width - a_field.size() - 1;
     const auto spaces = std::string(padding > 0 ? padding : 0, ' ');
     out << spaces << a_field;
@@ -53,18 +50,21 @@ auto &printStrRight(std::ostream &out, const std::string_view a_field,
     return out;
 }
 
-void printHeaders(std::ostream &out, const pqxx::result &a_result,
-                  const std::vector<ColumnInfo> &column_infos, const std::string_view delimiter) {
+void printHeaders(std::ostream &out,
+                  const pqxx::result &a_result,
+                  const std::vector<ColumnInfo> &column_infos,
+                  const std::string_view delimiter) {
     for (std::size_t i = 0; i < column_infos.size() - 1; ++i) {
-        printStrInCenter(out, a_result.column_name(i),
-                         column_infos[i].width) << delimiter;
+        printStrInCenter(out, a_result.column_name(i), column_infos[i].width) << delimiter;
     }
-    printStrInCenter(out, a_result.column_name(a_result.columns() - 1),
-                     column_infos.back().width) << '\n';
+    printStrInCenter(out, a_result.column_name(a_result.columns() - 1), column_infos.back().width)
+        << '\n';
 }
 
-auto &printField(std::ostream &out, const std::string_view a_field,
-                 const std::string_view special_chars, const ColumnInfo &column_info) {
+auto &printField(std::ostream &out,
+                 const std::string_view a_field,
+                 const std::string_view special_chars,
+                 const ColumnInfo &column_info) {
     const auto do_quote = (not special_chars.empty()) and
                           (a_field.find_first_of(special_chars) != std::string_view::npos);
     if (do_quote) {
@@ -89,11 +89,9 @@ inline auto &printFieldBar(std::ostream &out, const int width) {
     return out << bar;
 }
 
-[[nodiscard]]
-auto isNumeric(const psqlxx::TypeMap &type_map, const pqxx::oid oid) {
+[[nodiscard]] auto isNumeric(const psqlxx::TypeMap &type_map, const pqxx::oid oid) {
     static const std::unordered_set<std::string_view> numeric_type_names {
-        "int8", "int2", "int4", "oid", "tid", "xid", "cid", "float4", "float4"
-    };
+        "int8", "int2", "int4", "oid", "tid", "xid", "cid", "float4", "float4"};
 
     const auto type_iter = type_map.find(oid);
     if (type_iter != type_map.cend()) {
@@ -103,9 +101,9 @@ auto isNumeric(const psqlxx::TypeMap &type_map, const pqxx::oid oid) {
     return false;
 }
 
-[[nodiscard]]
-auto getColumnInfos(const pqxx::result &a_result, const psqlxx::TypeMap &type_map,
-                    const bool no_align) {
+[[nodiscard]] auto getColumnInfos(const pqxx::result &a_result,
+                                  const psqlxx::TypeMap &type_map,
+                                  const bool no_align) {
     std::vector<ColumnInfo> column_infos(a_result.columns());
 
     for (std::size_t i = 0; i < column_infos.size(); ++i) {
@@ -121,10 +119,8 @@ auto getColumnInfos(const pqxx::result &a_result, const psqlxx::TypeMap &type_ma
     }
 
     for (const auto &row : a_result) {
-        if (not row.empty()) {
-            for (std::size_t i = 0; i < column_infos.size(); ++i) {
-                column_infos[i].width = std::max(column_infos[i].width, row[i].view().size());
-            }
+        for (std::size_t i = 0; i < column_infos.size(); ++i) {
+            column_infos[i].width = std::max(column_infos[i].width, row[i].view().size());
         }
     }
 
@@ -135,28 +131,30 @@ auto getColumnInfos(const pqxx::result &a_result, const psqlxx::TypeMap &type_ma
     return column_infos;
 }
 
-}
+} // namespace
 
 
 namespace psqlxx {
 
 void AddFormatOptions(cxxopts::Options &options) {
-    options.add_options("Formatter")
-    ("A,no-align", "unaligned table output mode",
-     cxxopts::value<bool>()->default_value("false"))
-    ("csv", "CSV (Comma-Separated Values) table output mode",
-     cxxopts::value<bool>()->default_value("false"))
+    options.add_options("Formatter")("A,no-align",
+                                     "unaligned table output mode",
+                                     cxxopts::value<bool>()->default_value("false"))(
+        "csv",
+        "CSV (Comma-Separated Values) table output mode",
+        cxxopts::value<bool>()->default_value("false"))
 
-    ("F,field-separator", "field separator for unaligned output",
-     cxxopts::value<std::string>()->default_value("|"))
+        ("F,field-separator",
+         "field separator for unaligned output",
+         cxxopts::value<std::string>()->default_value("|"))
 
-    ("o,out-file", "send query results to file",
-     cxxopts::value<std::string>()->default_value(""))
-    ;
+            ("o,out-file",
+             "send query results to file",
+             cxxopts::value<std::string>()->default_value(""));
 }
 
 FormatterOptions HandleFormatOptions(const cxxopts::ParseResult &parsed_options) {
-    FormatterOptions options{};
+    FormatterOptions options {};
 
     options.out_file = parsed_options["out-file"].as<std::string>();
 
@@ -173,16 +171,21 @@ FormatterOptions HandleFormatOptions(const cxxopts::ParseResult &parsed_options)
     return options;
 }
 
-void PrintResult(const pqxx::result &a_result, const FormatterOptions &options,
-                 const TypeMap &type_map, std::ostream &out, const std::string_view title) {
+void PrintResult(const pqxx::result &a_result,
+                 const FormatterOptions &options,
+                 const TypeMap &type_map,
+                 std::ostream &out,
+                 const std::string_view title) {
     if (a_result.columns() > 0) {
         const auto column_infos = getColumnInfos(a_result, type_map, options.no_align);
 
         if (options.show_title_and_summary and (not title.empty())) {
-            const auto total_width = std::accumulate(column_infos.cbegin(), column_infos.cend(), 0,
-            [](const auto init, const auto & info) {
-                return init + info.width;
-            });
+            const auto total_width = std::accumulate(column_infos.cbegin(),
+                                                     column_infos.cend(),
+                                                     0,
+                                                     [](const auto init, const auto &info) {
+                                                         return init + info.width;
+                                                     });
             printStrInCenter(out, title, total_width) << '\n';
         }
 
@@ -196,14 +199,12 @@ void PrintResult(const pqxx::result &a_result, const FormatterOptions &options,
         }
 
         for (const auto &row : a_result) {
-            if (not row.empty()) {
-                for (std::size_t i = 0; i < column_infos.size() - 1; ++i) {
-                    printField(out, row[i].view(), options.special_chars,
-                               column_infos[i]) << options.delimiter;
-                }
-                printField(out, row.back().view(), options.special_chars,
-                           column_infos.back()) << '\n';
+            for (std::size_t i = 0; i < column_infos.size() - 1; ++i) {
+                printField(out, row[i].view(), options.special_chars, column_infos[i])
+                    << options.delimiter;
             }
+            printField(out, row.back().view(), options.special_chars, column_infos.back())
+                << '\n';
         }
 
         if (options.show_title_and_summary) {
@@ -215,4 +216,4 @@ void PrintResult(const pqxx::result &a_result, const FormatterOptions &options,
     }
 }
 
-}//namespace psqlxx
+} //namespace psqlxx
