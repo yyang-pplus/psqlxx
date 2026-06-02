@@ -16,8 +16,7 @@ using namespace psqlxx;
 
 namespace {
 
-[[nodiscard]]
-inline auto validName(const Command::NameType &name) {
+[[nodiscard]] inline auto validName(const Command::NameType &name) {
     if (name.empty()) {
         return true;
     }
@@ -26,8 +25,7 @@ inline auto validName(const Command::NameType &name) {
     return std::regex_match(name.data(), name_pattern);
 }
 
-[[nodiscard]]
-inline auto validArgument(const Command::ArgumentType &argument) {
+[[nodiscard]] inline auto validArgument(const Command::ArgumentType &argument) {
     if (argument.empty()) {
         return false;
     }
@@ -40,7 +38,7 @@ inline auto validArgument(const Command::ArgumentType &argument) {
     return std::regex_match(argument.data(), argument_pattern);
 }
 
-}
+} // namespace
 
 
 namespace psqlxx {
@@ -69,16 +67,15 @@ bool validCommand(const Command::NameArrayType &names,
     return true;
 }
 
-}//namespace internal
+} //namespace internal
 
 
 Command::Command(NameArrayType n,
                  ArgumentArrayType arguments,
                  ActionType action,
-                 DescriptionType description):
+                 DescriptionType description) :
     names(std::move(n)),
-    m_arguments(std::move(arguments)),
-    m_action(std::move(action)),
+    m_arguments(std::move(arguments)), m_action(std::move(action)),
     m_description(std::move(description)) {
     for (const auto an_argument : m_arguments) {
         if (an_argument == VARIADIC_ARGUMENT) {
@@ -100,8 +97,9 @@ CommandResult Command::operator()(const char **words, const int word_count) cons
     if (not m_variadic_argument) {
         const ArgumentArrayType::size_type number_arguments = word_count - 1;
         if (number_arguments > m_arguments.size()) {
-            std::cerr << "Command (" << words[0] << ") failed: Too many arguments. Expected " <<
-                      m_arguments.size() << ", but " << number_arguments << " were given." << std::endl;
+            std::cerr << "Command (" << words[0] << ") failed: Too many arguments. Expected "
+                      << m_arguments.size() << ", but " << number_arguments << " were given."
+                      << std::endl;
             return CommandResult::failure;
         }
     }
@@ -110,8 +108,7 @@ CommandResult Command::operator()(const char **words, const int word_count) cons
 }
 
 
-CommandGroup::CommandGroup(Command::NameType name,
-                           Command::DescriptionType description):
+CommandGroup::CommandGroup(Command::NameType name, Command::DescriptionType description) :
     m_name(std::move(name)), m_description(std::move(description)) {
     assert(validName(m_name));
 }
@@ -126,20 +123,19 @@ void CommandGroup::AddOneOption(Command::NameArrayType names,
         names.push_back("");
     }
 
-    const auto command_ptr = std::make_shared<Command>(std::move(names),
-                                                       std::move(arguments),
-                                                       std::move(action),
-                                                       std::move(description));
+    const auto command_ptr = std::make_shared<Command>(
+        std::move(names), std::move(arguments), std::move(action), std::move(description));
     for (const auto &command_name : command_ptr->names) {
         if (command_name.empty()) {
             if (m_anonymous_command)
-                throw CommandException{"Only one anonymous command is allowed within one group"};
+                throw CommandException {"Only one anonymous command is allowed within one group"};
             m_anonymous_command = command_ptr;
         } else {
             const auto insertion_happened =
                 m_name_command_map.emplace(command_name, command_ptr).second;
             if (not insertion_happened) {
-                throw CommandException{"Duplicate command name '" + std::string{command_name} + "' within one group"};
+                throw CommandException {"Duplicate command name '" + std::string {command_name} +
+                                        "' within one group"};
             }
         }
     }
@@ -149,7 +145,7 @@ void CommandGroup::AddOneOption(Command::NameArrayType names,
 
 void CommandGroup::Help() const {
     std::cout << Name() << ":\n";
-    for (const auto [name, command] : m_name_command_map) {
+    for (const auto &[name, command] : m_name_command_map) {
         std::cout << "  " << name << '\t';
         if (name.size() < 6) {
             std::cout << '\t';
@@ -180,7 +176,7 @@ CommandResult CommandGroup::operator()(const char **words, const int word_count)
 }
 
 std::string_view CommandGroup::PrefixSearch(const std::string_view prefix) const {
-    for (const auto [name, _] : m_name_command_map) {
+    for (const auto &[name, _] : m_name_command_map) {
         if (StartsWith(name, prefix)) {
             return name;
         }
@@ -190,8 +186,7 @@ std::string_view CommandGroup::PrefixSearch(const std::string_view prefix) const
 }
 
 
-CommandResult HelpGroups(const std::vector<CommandGroup> &groups,
-                         const std::string_view name) {
+CommandResult HelpGroups(const std::vector<CommandGroup> &groups, const std::string_view name) {
     if (name.empty()) {
         const auto USAGE =
             "You are using psqlxx, yet another command-line interface to PostgreSQL.";
@@ -219,4 +214,4 @@ CommandResult HelpGroups(const std::vector<CommandGroup> &groups,
     return CommandResult::success;
 }
 
-}//namespace psqlxx
+} //namespace psqlxx
