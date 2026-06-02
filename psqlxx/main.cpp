@@ -13,8 +13,7 @@ using namespace psqlxx;
 
 namespace {
 
-[[nodiscard]]
-inline auto buildOptions() {
+[[nodiscard]] inline auto buildOptions() {
     auto options = CreateBaseOptions();
 
     AddDbProxyOptions(options);
@@ -22,9 +21,7 @@ inline auto buildOptions() {
     return options;
 }
 
-[[nodiscard]]
-inline auto
-handleOptions(cxxopts::Options &options, const int argc, char **argv) {
+[[nodiscard]] inline auto handleOptions(cxxopts::Options &options, const int argc, char **argv) {
     const auto results = ParseOptions(options, argc, argv);
     if (not results) {
         exit(EXIT_FAILURE);
@@ -35,34 +32,34 @@ handleOptions(cxxopts::Options &options, const int argc, char **argv) {
     return HandleDbProxyOptions(results.value());
 }
 
-[[nodiscard]]
-inline constexpr auto toExitCode(const bool success) {
+[[nodiscard]] inline constexpr auto toExitCode(const bool success) {
     return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-[[nodiscard]]
-inline std::unique_ptr<FILE, decltype(&fclose)>
-OpenCommandFile(const std::string &command_file) {
-    FILE *file_ptr{};
+using UniqueFile = std::unique_ptr<FILE, decltype([](FILE *f) {
+                                       std::fclose(f);
+                                   })>;
+
+[[nodiscard]] inline auto OpenCommandFile(const std::string &command_file) {
+    UniqueFile result;
     if (not command_file.empty()) {
-        file_ptr = fopen(command_file.c_str(), "r");
-        if (not file_ptr) {
-            std::cerr << "Failed to open command file '" <<
-                      command_file << "': " << strerror(errno) << std::endl;
+        result.reset(std::fopen(command_file.c_str(), "r"));
+        if (not result) {
+            std::cerr << "Failed to open command file '" << command_file
+                      << "': " << strerror(errno) << std::endl;
             exit(EXIT_FAILURE);
         }
     }
 
-    return {file_ptr, &fclose};
+    return result;
 }
-
-}
+} // namespace
 
 
 int main(int argc, char **argv) {
     auto options = buildOptions();
 
-    DbProxy db_proxy{handleOptions(options, argc, argv)};
+    DbProxy db_proxy {handleOptions(options, argc, argv)};
     if (not db_proxy) {
         return EXIT_FAILURE;
     }
