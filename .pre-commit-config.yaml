@@ -1,24 +1,24 @@
 default_stages: [pre-commit]
 repos:
   - repo: https://github.com/yyang-pplus/config-sh.git
-    rev: 5888d1c64e8d11186b79075ea7a4e893a7e72c72
+    rev: b768af69778668afc67b14b11ec88f6c9ca0eb00
     hooks:
       - id: astyle-c-in
       - id: shfmt
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v14.0.3
+    rev: v22.1.5
     hooks:
       - id: clang-format
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 26.5.1
     hooks:
       - id: black
         language_version: python3
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v6.0.0
     hooks:
       - id: check-executables-have-shebangs
         stages: [pre-commit]
@@ -41,16 +41,16 @@ repos:
       - id: cmake-lint
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.960
+    rev: v2.1.0
     hooks:
       - id: mypy
 
   - repo: https://github.com/markdownlint/markdownlint.git
-    rev: v0.11.0
+    rev: v0.13.0
     hooks:
       - id: markdownlint
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.38.0
     hooks:
       - id: yamllint
