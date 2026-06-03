@@ -1,10 +1,10 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 #
 # This script generate the keyword.hpp file
 #
-
-set -ex
 
 THIS_DIR=$(dirname "$0")
 source "$THIS_DIR/utils.sh"
